@@ -1,2 +1,3 @@
-# clpcnet
-Controllable LPCNet (CLPCNet)
+# Controllable LPCNet (CLPCNet)
+
+Coming soon =)
