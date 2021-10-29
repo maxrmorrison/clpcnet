@@ -1,0 +1,5 @@
+*.egg-info/
+.git/
+bin/
+data/
+runs/

@@ -1,0 +1,18 @@
+# Directories
+*.egg-info/
+__pycache__/
+.ipynb_checkpoints/
+.vscode/
+data/
+!data/.gitkeep
+htk/
+notebooks/
+runs/
+!runs/*/.gitkeep
+bin/
+packages/
+!clpcnet/assets/
+
+# Metadata
+.DS_Store
+._.DS_Store
