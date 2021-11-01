@@ -1,9 +1,11 @@
 # Controllable LPCNet
 
-Code corresponding to the paper "Neural Pitch-Shifting and Time-Stretching
-with Controllable LPCNet" [1]. Audio examples can be found
+Official repository for the paper "Neural Pitch-Shifting and Time-Stretching
+with Controllable LPCNet" [1]. Performs pitch-shifting and time-stretching of
+speech recordings. Audio examples can be found
 [here](https://maxrmorrison.com/sites/controllable-lpcnet). The original
-LPCNet [2] code can be found [here](https://github.com/mozilla/LPCNet).
+LPCNet [2] code can be found [here](https://github.com/mozilla/LPCNet). If you
+use this code in an academic publication, please [cite our paper](#citation).
 
 
 ## Table of contents
@@ -37,7 +39,7 @@ LPCNet [2] code can be found [here](https://github.com/mozilla/LPCNet).
   * [`clpcnet.pitch`](#clpcnetpitch)
   * [`clpcnet.preprocess`](#clpcnetpreprocess)
   * [`clpcnet.preprocess.augment`](#clpcnetpreprocessaugment)
-  * [`clpcnet.train`](#clpcnet.train)
+  * [`clpcnet.train`](#clpcnettrain)
 - [Citation](#citation)
 - [References](#references)
 
