@@ -44,13 +44,13 @@ FMAX = 550.  # Hz
 FMIN = 63. if ABLATE_PITCH_REPR else 50.  # Hz
 
 # DSP parameters
-HOPSIZE = 160  # samples
-BLOCK_SIZE = 640  # samples
-LPC_ORDER = 16
+HOPSIZE = 256  # samples
+BLOCK_SIZE = 4 * HOPSIZE  # samples
+LPC_ORDER = 22
 MAX_SAMPLE_VALUE = 32768
 PCM_LEVELS = 256
 PREEMPHASIS_COEF = 0.85
-SAMPLE_RATE = 16000  # Hz
+SAMPLE_RATE = 22050  # Hz
 
 # Training parameters
 AVERAGE_STEPS_PER_EPOCH = 436925  # batches per epoch

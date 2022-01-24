@@ -34,7 +34,7 @@
 #include "x86/celt_lpc_sse.h"
 #endif
 
-#define LPC_ORDER 16
+#define LPC_ORDER 22
 
 float _celt_lpc(opus_val16 *_lpc, opus_val16 *rc, const opus_val32 *ac, int p);
 

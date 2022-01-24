@@ -7,9 +7,9 @@
 #include "lpcnet.h"
 
 #define PITCH_MIN_PERIOD 32  //
-#define PITCH_MAX_PERIOD 256 //
+#define PITCH_MAX_PERIOD 512 //
 
-#define PITCH_FRAME_SIZE 320                                 //
+#define PITCH_FRAME_SIZE 512                                 //
 #define PITCH_BUF_SIZE (PITCH_MAX_PERIOD + PITCH_FRAME_SIZE) //
 
 #define FORBIDDEN_INTERP 7

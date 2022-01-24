@@ -38,7 +38,7 @@ Constants
 
 
 #ifndef FRAME_SIZE
-#define FRAME_SIZE 160
+#define FRAME_SIZE 256
 #endif
 
 #ifndef HALF_FRAME
@@ -50,19 +50,19 @@ Constants
 #endif
 
 #ifndef LPC_ORDER
-#define LPC_ORDER 16
+#define LPC_ORDER 22
 #endif
 
 #ifndef NB_BANDS
-#define NB_BANDS 18
+#define NB_BANDS 21
 #endif
 
 #ifndef OVERLAP_SIZE
-#define OVERLAP_SIZE 160
+#define OVERLAP_SIZE 256
 #endif
 
 #ifndef PITCH_MAX_PERIOD
-#define PITCH_MAX_PERIOD 256
+#define PITCH_MAX_PERIOD 512
 #endif
 
 #ifndef WINDOW_SIZE
