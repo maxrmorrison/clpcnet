@@ -21,10 +21,14 @@ def crepe(audio, gpu=None):
     # Highpass
     audio = clpcnet.preprocess.highpass(audio)
 
+    # Convert to torch
+    audio = torch.tensor(audio.copy(), dtype=torch.float)[None]
+
     # Estimate pitch
     pitch, periodicity = torchcrepe.predict(
-        torch.tensor(audio.copy(), dtype=torch.float)[None],
+        audio,
         sample_rate=clpcnet.SAMPLE_RATE,
+        hop_length=clpcnet.HOPSIZE,
         fmin=clpcnet.FMIN,
         fmax=clpcnet.FMAX,
         model='full',
@@ -32,12 +36,16 @@ def crepe(audio, gpu=None):
         batch_size=1024,
         device='cpu' if gpu is None else f'cuda:{gpu}')
 
+    # Set low energy frames to unvoiced
+    loudness = torchcrepe.loudness.a_weighted(
+        audio,
+        clpcnet.SAMPLE_RATE,
+        clpcnet.HOPSIZE).to(pitch.device)
+    periodicity[loudness < -60.] = 0.
+
     # Detach from graph
     pitch = pitch.cpu().squeeze().numpy()
     periodicity = periodicity.cpu().squeeze().numpy()
-
-    # Set low energy frames to unvoiced
-    periodicity[clpcnet.loudness.a_weighted(audio) < -60.] = 0.
 
     return pitch, periodicity
 
@@ -116,6 +124,7 @@ def from_file(file, gpu=None):
 def from_file_to_file(file, prefix, gpu=None):
     """Preprocess crepe pitch from file and save to disk"""
     pitch, periodicity = from_file(file, gpu)
+    prefix.parent.mkdir(exist_ok=True, parents=True)
     np.save(f'{prefix}-pitch.npy', pitch)
     np.save(f'{prefix}-periodicity.npy', periodicity)
 

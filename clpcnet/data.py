@@ -180,6 +180,20 @@ class Vctk(Dataset):
                     f'{stem}_mic2.flac')
 
 
+class VctkProMo(Dataset):
+
+    name = 'vctk-promo'
+
+    @staticmethod
+    def file_to_stem(file):
+        """Convert vctk file to stem"""
+        return f'{file.parent.name}/{file.stem}'
+
+    @staticmethod
+    def stem_to_file(directory, stem):
+        return directory / f'{stem}.wav'
+
+
 ###############################################################################
 # Utilities
 ###############################################################################
@@ -197,4 +211,6 @@ def resolve(name):
         return RavdessVariable
     elif name == 'vctk':
         return Vctk
+    elif name == 'vctk-promo':
+        return VctkProMo
     raise ValueError(f'Dataset {name} is not defined')

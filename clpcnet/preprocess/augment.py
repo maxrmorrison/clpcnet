@@ -35,7 +35,9 @@ def dataset(dataset=DATASET,
     """Perform data augmentation for a given dataset"""
     # Compute the current histogram from pitch files in cache and determine
     # for each example which scales have been used
-    counts, scales = count_cache(dataset, cache)
+    counts, scales = count_cache(cache)
+
+    import pdb; pdb.set_trace()
 
     # Get list of audio files
     files = clpcnet.data.files(dataset, directory, 'train')
@@ -107,13 +109,13 @@ def dataset(dataset=DATASET,
 ###############################################################################
 
 
-def count_cache(dataset, cache):
+def count_cache(cache):
     """Compute pitch histogram and used scales of examples in cache"""
     counts = np.zeros(clpcnet.PITCH_BINS, dtype=int)
     scales = {}
 
     # Loop over pitch files
-    for file in cache.glob('*-pitch.npy'):
+    for file in cache.rglob('*-pitch.npy'):
 
         # Load pitch
         pitch = np.load(file)

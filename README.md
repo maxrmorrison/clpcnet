@@ -139,7 +139,7 @@ constant-ratio time-stretching with a ratio of 1.2.
 ```python
 import clpcnet
 
-# Load audio from disk and resample to 16 kHz
+# Load audio from disk and resample
 audio_file = 'audio.wav'
 audio = clpcnet.load.audio(audio_file)
 

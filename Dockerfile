@@ -4,6 +4,7 @@ FROM nvidia/cuda:10.0-cudnn7-runtime-ubuntu18.04
 RUN apt-get update && \
     apt-get install -y \
     ffmpeg \
+    g++ \
     gcc-multilib \
     libsndfile1 \
     make \
@@ -43,6 +44,7 @@ COPY requirements.txt /clpcnet/requirements.txt
 
 # Install python dependencies
 WORKDIR /clpcnet
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Copy C preprocessing code

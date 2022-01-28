@@ -8,14 +8,6 @@ import tqdm
 import clpcnet
 
 
-__all__ = ['from_audio',
-           'from_features',
-           'from_file',
-           'from_file_to_file',
-           'from_files_to_files',
-           'to_file']
-
-
 ###############################################################################
 # Vocode
 ###############################################################################
@@ -78,7 +70,6 @@ def from_audio(audio,
 
     # Pitch and pitch ratio for each frame
     features, pitch_bins = per_frame_pitch(audio,
-                                           clpcnet.SAMPLE_RATE,
                                            features,
                                            source_alignment,
                                            target_alignment,
@@ -565,7 +556,6 @@ def per_frame_hopsizes(features,
 
 
 def per_frame_pitch(audio,
-                    sample_rate,
                     features,
                     source_alignment=None,
                     target_alignment=None,
