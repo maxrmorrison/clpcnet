@@ -35,21 +35,19 @@ def dataset(dataset=DATASET,
     """Perform data augmentation for a given dataset"""
     # Compute the current histogram from pitch files in cache and determine
     # for each example which scales have been used
-    counts, scales = count_cache(cache)
-
-    import pdb; pdb.set_trace()
+    # counts, scales = count_cache(dataset, cache)
 
     # Get list of audio files
     files = clpcnet.data.files(dataset, directory, 'train')
-    random.seed(0)
-    random.shuffle(files)
+    # random.seed(0)
+    # random.shuffle(files)
 
     # Preprocessing workers
     feature_pool = mp.Pool(min(os.cpu_count() - 1, 2))
     pitch_pool = mp.Pool(1)
 
     # Iterate over dataset
-    for i in range(passes):
+    for i, scale in enumerate(ALLOWED_SCALES):
         iterator = tqdm.tqdm(files,
                              dynamic_ncols=True,
                              desc=f'augmentation pass {i}')
@@ -57,21 +55,22 @@ def dataset(dataset=DATASET,
 
             # Load pitch
             stem = clpcnet.data.file_to_stem(dataset, file)
-            pitch = np.load(cache / f'{stem}-r100-pitch.npy')
-            periodicity = np.load(cache / f'{stem}-r100-periodicity.npy')
-
+            # pitch = np.load(cache / f'{stem}-r100-pitch.npy')
+            # periodicity = np.load(cache / f'{stem}-r100-periodicity.npy')
             # Threshold pitch
-            pitch = clpcnet.pitch.threshold(pitch, periodicity)
+            # pitch = clpcnet.pitch.threshold(pitch, periodicity)
+            # pitch = pitch[~np.isnan(pitch)]
+
 
             # Select scale to use that maximizes entropy
-            scale, counts = select_scale(pitch[~np.isnan(pitch)],
-                                        counts,
-                                        allowed_scales,
-                                        scales[stem])
+            # scale, counts = select_scale(pitch,
+            #                              counts,
+            #                              allowed_scales,
+            #                              scales[stem])
 
             # No unused scale for this file
-            if scale is None:
-                continue
+            # if scale is None:
+            #     continue
 
             # Load audio
             audio, sample_rate = soundfile.read(file)
@@ -88,12 +87,13 @@ def dataset(dataset=DATASET,
             prefix = f'{cache / stem}-r{scale:03}'
             feature_pool.apply_async(clpcnet.preprocess.from_audio_to_file,
                                      (scaled, prefix))
-            pitch_pool.apply_async(clpcnet.pitch.from_audio_to_file,
-                                   (scaled, prefix, gpu))
-            # clpcnet.pitch.from_audio_to_file(scaled, prefix, gpu)
+            # pitch_pool.apply_async(clpcnet.pitch.from_audio_to_file,
+            #                        (scaled, prefix, gpu))
+            # clpcnet.preprocess.from_audio_to_file(scaled, prefix)
+            clpcnet.pitch.from_audio_to_file(scaled, prefix, gpu)
 
             # Mark scale as used
-            scales[stem].append(scale)
+            # scales[stem].append(scale)
 
     # Close worker pools
     feature_pool.close()
@@ -109,95 +109,97 @@ def dataset(dataset=DATASET,
 ###############################################################################
 
 
-def count_cache(cache):
-    """Compute pitch histogram and used scales of examples in cache"""
-    counts = np.zeros(clpcnet.PITCH_BINS, dtype=int)
-    scales = {}
+# def count_cache(dataset, cache):
+#     """Compute pitch histogram and used scales of examples in cache"""
+#     counts = np.zeros(clpcnet.PITCH_BINS, dtype=int)
+#     scales = {}
 
-    # Loop over pitch files
-    for file in cache.rglob('*-pitch.npy'):
+#     # Loop over pitch files
+#     for file in cache.rglob('*-pitch.npy'):
 
-        # Load pitch
-        pitch = np.load(file)
-        periodicity = np.load(str(file).replace('-pitch.npy',
-                                                '-periodicity.npy'))
+#         # Load pitch
+#         pitch = np.load(file)
+#         periodicity = np.load(str(file).replace('-pitch.npy',
+#                                                 '-periodicity.npy'))
 
-        # Add pitch to histogram
-        counts += count_pitch(clpcnet.pitch.threshold(pitch, periodicity))
+#         # Add pitch to histogram
+#         counts += count_pitch(clpcnet.pitch.threshold(pitch, periodicity))
 
-        # Add scale to used set
-        stem = file.stem[:-11]
-        if stem not in scales:
-            scales[stem] = []
-        scales[stem].append(int(file.stem[-9:-6]))
+#         # Add scale to used set
+#         stem = clpcnet.data.file_to_stem(
+#             dataset,
+#             (file.parent / file.stem[:-11]).with_suffix('.wav'))
+#         if stem not in scales:
+#             scales[stem] = []
+#         scales[stem].append(int(file.stem[-9:-6]))
 
-    return counts, scales
-
-
-def count_pitch(pitch):
-    """Compute pitch histogram on pitch in Hz"""
-    bins = clpcnet.convert.hz_to_bins(pitch[~np.isnan(pitch)])
-    return np.bincount(bins, minlength=clpcnet.PITCH_BINS)
+#     return counts, scales
 
 
-def entropy(counts):
-    """Compute the entropy of the categorical distribution defined by counts"""
-    # Compute categorical distribution parameters
-    distribution = counts / counts.sum(keepdims=True)
-
-    # Compute entropy contribution of each category
-    contribution = distribution * np.log2(distribution)
-    contribution[np.isnan(contribution)] = 0.
-
-    return - (1. / np.log2(len(distribution))) * contribution.sum()
+# def count_pitch(pitch):
+#     """Compute pitch histogram on pitch in Hz"""
+#     bins = clpcnet.convert.hz_to_bins(pitch[~np.isnan(pitch)])
+#     return np.bincount(bins, minlength=clpcnet.PITCH_BINS)
 
 
-def scale_pitch(pitch, scale):
-    """Scale pitch by scale factor"""
-    # Scale
-    scale_min = clpcnet.FMIN / pitch.min()
-    scale_max = clpcnet.FMAX / pitch.max()
-    scale = scale_min if scale < scale_min else scale
-    scale = scale_max if scale > scale_max else scale
-    pitch = scale * pitch.copy()
+# def entropy(counts):
+#     """Compute the entropy of the categorical distribution defined by counts"""
+#     # Compute categorical distribution parameters
+#     distribution = counts / counts.sum(keepdims=True)
 
-    # Interpolate
-    scaled = np.interp(np.arange(0, len(pitch), scale),
-                       np.arange(len(pitch)),
-                       pitch)
+#     # Compute entropy contribution of each category
+#     contribution = distribution * np.log2(distribution)
+#     contribution[np.isnan(contribution)] = 0.
 
-    return scaled, int(100 * scale)
+#     return - (1. / np.log2(len(distribution))) * contribution.sum()
 
 
-def select_scale(pitch, counts, allowed_scales, used_scales):
-    """
-    Shift the pitch by all allowed scales. If scale causes pitch to be
-    outside (50, 550), use the closest scale that keeps pitch in this range.
-    Do not use scale values that have already been used for this file.
-    """
-    best_entropy, best_scale = None, None
-    for scale in set(allowed_scales) - set(used_scales):
+# def scale_pitch(pitch, scale):
+#     """Scale pitch by scale factor"""
+#     # Scale
+#     scale_min = clpcnet.FMIN / pitch.min()
+#     scale_max = clpcnet.FMAX / pitch.max()
+#     scale = scale_min if scale < scale_min else scale
+#     scale = scale_max if scale > scale_max else scale
+#     pitch = scale * pitch.copy()
 
-        # Scale pitch
-        scaled, scale = scale_pitch(pitch, scale / 100.)
+#     # Interpolate
+#     scaled = np.interp(np.arange(0, len(pitch), scale),
+#                        np.arange(len(pitch)),
+#                        pitch)
 
-        # If scale was clipped, make sure we can still use it
-        if scale in used_scales:
-            continue
+#     return scaled, int(100 * scale)
 
-        # Get pitch histogram
-        scale_counts = counts + count_pitch(scaled)
 
-        # Measure entropy for this scale
-        scale_entropy = entropy(scale_counts)
+# def select_scale(pitch, counts, allowed_scales, used_scales):
+#     """
+#     Shift the pitch by all allowed scales. If scale causes pitch to be
+#     outside (50, 550), use the closest scale that keeps pitch in this range.
+#     Do not use scale values that have already been used for this file.
+#     """
+#     best_entropy, best_scale = None, None
+#     for scale in set(allowed_scales) - set(used_scales):
 
-        # Select scale if it maximizes entropy
-        if best_entropy is None or \
-           (best_entropy is not None and scale_entropy > best_entropy):
-            best_entropy, best_scale = scale_entropy, scale
-            counts = scale_counts
+#         # Scale pitch
+#         scaled, scale = scale_pitch(pitch, scale / 100.)
 
-    return best_scale, counts
+#         # If scale was clipped, make sure we can still use it
+#         if scale in used_scales:
+#             continue
+
+#         # Get pitch histogram
+#         scale_counts = counts + count_pitch(scaled)
+
+#         # Measure entropy for this scale
+#         scale_entropy = entropy(scale_counts)
+
+#         # Select scale if it maximizes entropy
+#         if best_entropy is None or \
+#            (best_entropy is not None and scale_entropy > best_entropy):
+#             best_entropy, best_scale = scale_entropy, scale
+#             counts = scale_counts
+
+#     return best_scale, counts
 
 
 ###############################################################################

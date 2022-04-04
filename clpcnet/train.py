@@ -48,14 +48,13 @@ import clpcnet
 ###############################################################################
 
 
-def load_features(directory, stems):
+def load_features(stems):
     """Load features from directory"""
     # Get feature filenames
-    sample_files = [directory / f'{stem}-samples.u8' for stem in stems]
-    frame_files = [directory / f'{stem}-frames.f32' for stem in stems]
-    pitch_files = [directory / f'{stem}-pitch.npy' for stem in stems]
-    periodicity_files = \
-        [directory / f'{stem}-periodicity.npy' for stem in stems]
+    sample_files = [f'{stem}-samples.u8' for stem in stems]
+    frame_files = [f'{stem}-frames.f32' for stem in stems]
+    pitch_files = [f'{stem}-pitch.npy' for stem in stems]
+    periodicity_files = [f'{stem}-periodicity.npy' for stem in stems]
 
     # Iterate over files and load
     samples, frames, pitches, periodicities = [], [], [], []
@@ -93,13 +92,18 @@ def load_features(directory, stems):
     return [samples, frames, pitches], targets
 
 
-def load_fit_loop(directory, model, epoch=0, callbacks=None):
+def load_fit_loop(dataset, directory, model, epoch=0, callbacks=None):
     """Loading all data at once takes up a lot of RAM. Loading only one batch
        at a time is too slow for clpcnet. We compromise and load a different
        large chunk of training features per epoch.
     """
-    # Get training data stems
-    files = sorted(directory.glob('*-samples.u8'))
+    # Get training stems and files
+    stems = sorted(clpcnet.data.stems(dataset, 'train'))
+    files = [
+        directory / f'{stem}-r{ratio:03d}-samples.u8'
+        for ratio in clpcnet.preprocess.augment.ALLOWED_SCALES + [100]
+        for stem in stems]
+    files = [file for file in files if file.exists()]
     random.seed(0)
     random.shuffle(files)
 
@@ -107,8 +111,8 @@ def load_fit_loop(directory, model, epoch=0, callbacks=None):
     train_files, valid_files = files[1750:], files[:1750]
 
     # Load validation set into memory
-    valid_stems = [file.stem[:-8] for file in valid_files]
-    valid_inputs, valid_outputs = load_features(directory, valid_stems)
+    valid_inputs, valid_outputs = load_features(
+        [Path(str(file)[:-11]) for file in valid_files])
 
     index = 0
     steps = epoch * clpcnet.AVERAGE_STEPS_PER_EPOCH
@@ -132,8 +136,8 @@ def load_fit_loop(directory, model, epoch=0, callbacks=None):
             index += 1
 
         # Load
-        stems = [file.stem[:-8] for file in batch]
-        inputs, outputs = load_features(directory, stems)
+        inputs, outputs = load_features(
+            [Path(str(file)[:-11]) for file in batch])
 
         # Fit
         model.fit(inputs,
@@ -309,7 +313,8 @@ def main():
             # Train
             initial_epoch = 0 if args.resume_from is None \
                 else int(args.resume_from.stem[-3:])
-            load_fit_loop(args.cache,
+            load_fit_loop(args.dataset,
+                          args.cache,
                           model,
                           initial_epoch,
                           callbacks=callbacks)
