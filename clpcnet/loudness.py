@@ -21,7 +21,7 @@ def a_weighted(audio, n_fft=1024, min_db=-100.):
 
     # Take stft
     stft = librosa.stft(audio,
-                        n_fft,
+                        n_fft=n_fft,
                         hop_length=clpcnet.HOPSIZE,
                         win_length=n_fft,
                         pad_mode='constant')

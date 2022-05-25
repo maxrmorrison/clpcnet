@@ -338,24 +338,27 @@ def from_files_to_files(audio_files,
         target_pitch_files = [None] * len(audio_files)
 
     # Setup multiprocessing
-    with mp.get_context('spawn').Pool() as pool:
+    pool = mp.get_context('spawn').Pool()
 
-        # Setup iterator
-        iterator = zip(audio_files,
-                       output_files,
-                       source_alignment_files,
-                       target_alignment_files,
-                       source_pitch_files,
-                       source_periodicity_files,
-                       target_pitch_files)
-        for af, of, saf, taf, spif, spef, tpf in iterator:
+    # Setup iterator
+    iterator = zip(audio_files,
+                    output_files,
+                    source_alignment_files,
+                    target_alignment_files,
+                    source_pitch_files,
+                    source_periodicity_files,
+                    target_pitch_files)
+    for af, of, saf, taf, spif, spef, tpf in iterator:
 
-            # Bundle arguments
-            args = (af, of, saf, taf, constant_stretch, spif, spef,
-                    tpf, constant_shift, checkpoint_file, None, False)
+        # Bundle arguments
+        args = (af, of, saf, taf, constant_stretch, spif, spef,
+                tpf, constant_shift, checkpoint_file, None, False)
 
-            # Vocode and save to disk
-            pool.apply_async(from_file_to_file, args)
+        # Vocode and save to disk
+        pool.apply_async(from_file_to_file, args)
+        # from_file_to_file(*args)
+    pool.close()
+    pool.join()
 
 
 def to_file(output_file,
